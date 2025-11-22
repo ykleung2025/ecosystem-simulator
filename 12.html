@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.2">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh-Hant"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;感受人類行為造成環境的變化 - 生態模擬器&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Load Tailwind CSS --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Custom styles for a friendly, educational feel */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #e0f2f1; /* Light cyan background */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.ecosystem-card {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #ffffff;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 4px solid #4db6ac; /* Teal border */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.simulate-button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #00897b; /* Dark Teal */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: background-color 0.3s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.simulate-button:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #00695c;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.loading-animation {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-top-color: #00897b;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>animation: spin 1s ease-in-out infinite;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@keyframes spin {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>to { transform: rotate(360deg); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Firebase SDK Imports for Authentication and Firestore (Required by Canvas) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Define global variables provided by the environment</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Check if configuration exists before parsing (for local run)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (firebaseConfig) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.firebaseApp = initializeApp(firebaseConfig);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.db = getFirestore(window.firebaseApp);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.auth = getAuth(window.firebaseApp);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Authentication logic</p>
+<p class="p1"><span class="Apple-converted-space">            </span>async function authenticate() {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (initialAuthToken) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await signInWithCustomToken(window.auth, initialAuthToken);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>console.log("Firebase signed in with custom token.");</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await signInAnonymously(window.auth);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>console.log("Firebase signed in anonymously.");</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Auth is ready, now the main script can proceed if needed</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error("Firebase authentication error:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>authenticate();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>// Inform user that database features are disabled in a local environment</p>
+<p class="p1"><span class="Apple-converted-space">             </span>console.warn("Firebase configuration not found. Database features will be disabled. The core AI simulation should still work if run on a server.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="p-4 md:p-8 min-h-screen flex items-center justify-center"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="app-container" class="w-full max-w-4xl ecosystem-card rounded-xl p-6 md:p-10"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1 class="text-3xl md:text-4xl font-extrabold text-teal-800 mb-6 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>感受人類行為造成環境的變化</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-center text-lg text-gray-600 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>歡迎你，四年級的生態學家！請輸入一個**人類的行為**，看看我們的森林會發生什麼事。</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Initial Ecosystem State --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="initial-state" class="mb-8 p-4 bg-teal-50 rounded-lg border border-teal-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-xl font-bold text-teal-700 mb-3 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.727A8 8 0 016.343 16.727m10.314 0A18.012 18.012 0 018.8 20.25c-5.264 0-9.84-2.274-12.03-5.066A17.923 17.923 0 0113.8 2.5c2.563 0 5.018.72 7.152 2.083"&gt;&lt;/path&gt;&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>我們的森林家庭 (初始狀態)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;ul class="text-gray-700 text-sm md:text-base space-y-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;li&gt;🌲 **植物：** 10棵大樹、幾叢灌木叢、幾株果樹、20叢小草、5株蕨類、野花。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;li&gt;🐿️ **動物：** 5隻松鼠、2隻貓頭鷹、12條小魚、8隻青蛙、15隻瓢蟲、30隻螞蟻、6隻蝴蝶。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;li&gt;🦊 **捕食者/大型動物：** 1隻紅狐、2隻小鹿、3隻野兔、1隻獾、1隻老鷹。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- User Input Area --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="space-y-4 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label for="human-action" class="block text-lg font-medium text-gray-700"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>請輸入一個人類的行為：</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="human-action" placeholder="例如：人們在溪邊丟棄垃圾，或：人們在森林裡種了更多樹。"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                   </span>class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-base shadow-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button id="simulate-btn" class="simulate-button text-white font-bold py-3 px-6 rounded-lg w-full transform hover:scale-[1.01] transition duration-200 shadow-md"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>開始模擬變化！</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Simulation Result Area --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="simulation-result" class="hidden mt-8 p-6 bg-yellow-50 rounded-lg border-l-4 border-yellow-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-2xl font-bold text-yellow-800 mb-4 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.31 16c-.77 1.333.192 3 1.732 3z"&gt;&lt;/path&gt;&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>模擬結果 (行為帶來的變化)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="result-image-desc" class="text-center mb-4 text-gray-500 italic"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="result-text" class="text-gray-800 text-base leading-relaxed"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Loading Indicator for Simulation --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="loading-spinner" class="hidden mt-8 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="inline-block h-8 w-8 border-4 border-gray-200 border-solid rounded-full loading-animation"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-teal-700 mt-2"&gt;AI 正在計算生態變化中，請稍候...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Error Message --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="error-message" class="hidden mt-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p&gt;模擬失敗，請再試一次。&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- NEW FEATURE: Cat Owl Q&amp;A Feature --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="mt-8 p-6 bg-indigo-50 rounded-xl border-l-4 border-indigo-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-2xl font-bold text-indigo-800 mb-4 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>🦉✨ 貓頭鷹專家問答時間</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-gray-700 mb-4 text-sm md:text-base"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>有關於這片森林或你剛才的模擬結果的任何問題嗎？問問住在樹洞裡的貓頭鷹專家吧！</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="text" id="cat-owl-question" placeholder="例如：為什麼小魚會死掉？"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                   </span>class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-base shadow-sm mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button id="ask-cat-owl-btn" class="text-white font-bold py-3 px-6 rounded-lg w-full transform hover:scale-[1.01] transition duration-200 shadow-md"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>style="background-color: #5b21b6;"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>✨ 提問貓頭鷹專家</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Loading Indicator for Q&amp;A --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="cat-owl-loading" class="hidden mt-4 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="inline-block h-6 w-6 border-3 border-gray-200 border-solid rounded-full loading-animation" style="border-top-color: #5b21b6;"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="text-indigo-700 mt-1 text-sm"&gt;貓頭鷹正在思考...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Cat Owl Response --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="cat-owl-response" class="hidden mt-4 p-4 bg-indigo-100 rounded-lg border border-indigo-300"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="font-semibold text-indigo-900 mb-1"&gt;🦉 貓頭鷹說：&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="cat-owl-text" class="text-gray-800 text-sm md:text-base"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Setup for Gemini API Call ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// NOTE: The API_KEY is provided by the execution environment.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const API_KEY = "";<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- DOM Elements ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const inputField = document.getElementById('human-action');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const simulateButton = document.getElementById('simulate-btn');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const resultContainer = document.getElementById('simulation-result');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const resultImageDesc = document.getElementById('result-image-desc');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const resultText = document.getElementById('result-text');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const loadingSpinner = document.getElementById('loading-spinner');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const errorMessage = document.getElementById('error-message');</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- NEW DOM Elements for Q&amp;A ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const catOwlQuestionField = document.getElementById('cat-owl-question');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const askCatOwlButton = document.getElementById('ask-cat-owl-btn');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const catOwlLoading = document.getElementById('cat-owl-loading');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const catOwlResponseContainer = document.getElementById('cat-owl-response');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const catOwlResponseText = document.getElementById('cat-owl-text');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Initial Ecosystem State Text (Context for the AI for Simulation)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const ECOSYSTEM_CONTEXT = `</p>
+<p class="p1"><span class="Apple-converted-space">            </span>這是給四年級學生使用的生態模擬器。請根據以下初始環境，模擬人類行為帶來的變化，並確保回答內容簡單易懂，不超過三句話。</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>初始生態環境：</p>
+<p class="p1"><span class="Apple-converted-space">            </span>- 🌲 植物：10棵大樹、幾叢灌木叢、幾株果樹、20叢小草、5株蕨類植物和野花。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>- 🐿️ 小動物：5隻松鼠、2隻貓頭鷹、12條小魚、8隻青蛙、15隻瓢蟲、30隻螞蟻、6隻蝴蝶。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>- 🦊 捕食者/大型動物：1隻紅狐、2隻小鹿、3隻野兔、1隻獾、1隻老鷹。</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>你的回答必須嚴格遵守以下格式和守則：</p>
+<p class="p1"><span class="Apple-converted-space">            </span>1. 答案必須非常簡單，適合四年級學生的知識範圍，且文字部分不超過三句。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>2. 回覆必須以一個圖像描述開始 (用作圖像顯示的模擬)，格式為：。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>3. 圖像描述後緊接著是文字解釋。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>4. **守則：** 只回答有關人類行為對生態所產生的影響。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>5. **守則：** 如果輸入內容不是「人類行為」，請直接輸出：[Image of A confused owl] 請輸人類行為作模擬測試。</p>
+<p class="p1"><span class="Apple-converted-space">        </span>`;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// NEW System Instruction for Cat Owl Q&amp;A</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const CAT_OWL_SYSTEM_INSTRUCTION = `</p>
+<p class="p1"><span class="Apple-converted-space">            </span>你是一位名叫「貓頭鷹專家」的生態學家，你的職責是回答四年級學生的簡單問題。</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>回答時請遵守以下規則：</p>
+<p class="p1"><span class="Apple-converted-space">            </span>1. 語氣必須友善、簡潔，使用適合四年級學生的詞彙。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>2. 將自己設定為森林裡的一隻貓頭鷹。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>3. 答案必須控制在兩到三句話內。</p>
+<p class="p1"><span class="Apple-converted-space">            </span>4. **如果問題與生態或環境變化無關，請友善地回答：「我是貓頭鷹專家，我只懂森林裡的秘密喔！請專心問和生態有關的問題。」**</p>
+<p class="p1"><span class="Apple-converted-space">            </span>5. 你可以使用「我知道」、「我觀察到」等詞彙來維持貓頭鷹的身份。</p>
+<p class="p1"><span class="Apple-converted-space">        </span>`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Converts sleep time from seconds to milliseconds.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {number} seconds - The number of seconds to sleep.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @returns {number} - The number of milliseconds to sleep.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const toMilliseconds = (seconds) =&gt; seconds * 1000;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Pauses execution for a specified number of seconds.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {number} seconds - The duration to pause.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const sleep = (seconds) =&gt; new Promise(resolve =&gt; setTimeout(resolve, toMilliseconds(seconds)));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Calls the Gemini API with exponential backoff.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {object} payload - The API request payload.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @param {number} retries - Current retry attempt count.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* @returns {Promise&lt;object&gt;} - The parsed JSON response.</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function fetchWithBackoff(payload, retries = 0) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const MAX_RETRIES = 5;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const response = await fetch(API_URL, {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>method: 'POST',</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>headers: { 'Content-Type': 'application/json' },</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>body: JSON.stringify(payload)</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (response.status === 429 &amp;&amp; retries &lt; MAX_RETRIES) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const delay = toMilliseconds(2 ** retries) + Math.random() * toMilliseconds(1);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await sleep(delay / 1000);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return fetchWithBackoff(payload, retries + 1);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!response.ok) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>throw new Error(`API error: ${response.statusText}`);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>return response.json();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (retries &lt; MAX_RETRIES) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const delay = toMilliseconds(2 ** retries) + Math.random() * toMilliseconds(1);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await sleep(delay / 1000);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return fetchWithBackoff(payload, retries + 1);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>throw new Error("Failed to fetch from API after multiple retries.");</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Handles the simulation click event (Original Feature).</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function handleSimulate() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Check if API key is available (essential for this function)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (API_KEY === "" &amp;&amp; typeof __api_key === 'undefined') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resultImageDesc.textContent = `(模擬圖像：未連線)`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resultText.textContent = "錯誤：無法連線到 AI 服務。請將應用程式部署到網路環境。";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resultContainer.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const humanAction = inputField.value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!humanAction) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Using a custom modal/UI message is preferred over alert, but simple alert here for quick feedback</p>
+<p class="p1"><span class="Apple-converted-space">                </span>alert('請先輸入一個人類行為！');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Clear previous results and show loading</p>
+<p class="p1"><span class="Apple-converted-space">            </span>resultContainer.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>errorMessage.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>loadingSpinner.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>simulateButton.disabled = true;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const userQuery = `人類行為：${humanAction}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const payload = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>contents: [{ parts: [{ text: userQuery }] }],</p>
+<p class="p1"><span class="Apple-converted-space">                </span>tools: [{ "google_search": {} }],<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>systemInstruction: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>parts: [{ text: ECOSYSTEM_CONTEXT }]</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>config: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>temperature: 0.2,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const result = await fetchWithBackoff(payload);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '模擬失敗，沒有得到結果。';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// FIX: Use the correct regex pattern to match the required format: [Image of &lt;desc&gt;] &lt;text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// It looks for , captures the description, and captures the rest of the text.</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const match = text.match(/\\s*(.*)/s);</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (match &amp;&amp; match.length &gt;= 3) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const imageDescription = match[1].trim();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const simulationText = match[2].trim();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Update UI</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultImageDesc.textContent = `(模擬圖像：${imageDescription})`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultText.innerHTML = simulationText.replace(/\n/g, '&lt;br&gt;'); // Keep line breaks for readability</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultContainer.classList.remove('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (text.includes("請輸人類行為作模擬測試。")) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Handle the specific guardrail response (if the AI returns the full guardrail text)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultImageDesc.textContent = `(模擬圖像：一隻困惑的貓頭鷹)`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultText.textContent = "請輸人類行為作模擬測試。";</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultContainer.classList.remove('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Fallback for unexpected format (e.g., if AI didn't follow the format exactly)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultImageDesc.textContent = `(模擬圖像：未知變化)`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Try to display the text even if the format is wrong</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultText.textContent = `模擬器未能理解變化，請嘗試用更簡單的中文描述人類行為。`;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error("Simulation output format error. Raw response:", text);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>resultContainer.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Simulation error:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>errorMessage.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resultContainer.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>loadingSpinner.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>simulateButton.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/**</p>
+<p class="p1"><span class="Apple-converted-space">         </span>* Handles the Cat Owl Q&amp;A feature (New Feature).</p>
+<p class="p1"><span class="Apple-converted-space">         </span>*/</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function handleAskCatOwl() {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>// Check if API key is available (essential for this function)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (API_KEY === "" &amp;&amp; typeof __api_key === 'undefined') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseText.textContent = "錯誤：無法連線到 AI 服務。請將應用程式部署到網路環境。";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseContainer.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const question = catOwlQuestionField.value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!question) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseText.textContent = "我是貓頭鷹專家，我只懂森林裡的秘密喔！請專心問和生態有關的問題。";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseContainer.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>catOwlResponseContainer.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>catOwlLoading.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>askCatOwlButton.disabled = true;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const payload = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>contents: [{ parts: [{ text: `學生問題：${question}` }] }],</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Use the Q&amp;A specific system instruction</p>
+<p class="p1"><span class="Apple-converted-space">                </span>systemInstruction: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>parts: [{ text: CAT_OWL_SYSTEM_INSTRUCTION }]</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>config: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>temperature: 0.7, // Higher temp for a friendly, conversational tone</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const result = await fetchWithBackoff(payload);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '對不起，貓頭鷹太睏了，無法回答。';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Update UI</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseText.innerHTML = text.replace(/\n/g, '&lt;br&gt;');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseContainer.classList.remove('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Cat Owl Q&amp;A error:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Use the Q&amp;A response box for the error message</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseText.textContent = "與貓頭鷹的連線中斷了，請稍後再試！";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlResponseContainer.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catOwlLoading.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>askCatOwlButton.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Attach event listeners</p>
+<p class="p1"><span class="Apple-converted-space">        </span>simulateButton.addEventListener('click', handleSimulate);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>askCatOwlButton.addEventListener('click', handleAskCatOwl);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Optional: Allow pressing Enter in the input field to trigger simulation</p>
+<p class="p1"><span class="Apple-converted-space">        </span>inputField.addEventListener('keypress', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (e.key === 'Enter') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>handleSimulate();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Optional: Allow pressing Enter in the Q&amp;A input field</p>
+<p class="p1"><span class="Apple-converted-space">        </span>catOwlQuestionField.addEventListener('keypress', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (e.key === 'Enter') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>handleAskCatOwl();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
